@@ -57,6 +57,11 @@ def group_rows_by_column(ws, group_col_name):
         for r in range(start_row + 1, ws.max_row + 1):
             ws.row_dimensions[r].outlineLevel = 1
 
+def color_excel_headers(ws, color="FFFF00"):
+    """Apply background color to the header row of an openpyxl worksheet."""
+    header_fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+    for cell in ws[1]:  # first row is header
+        cell.fill = header_fill
 # ------------------------------
 # Hide columns as it reference format
 # ------------------------------
@@ -91,6 +96,12 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
     hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
     hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
+
+        # ---- NEW: Color headers in all sheets ----
+    color_excel_headers(wb["Sheet1"], color="FFFF00")        # Yellow headers
+    color_excel_headers(wb["相手先注文"], color="FFFF00")
+    color_excel_headers(wb["商品名"], color="FFFF00")
+    out2 = BytesIO()
 
     out2 = BytesIO()
     wb.save(out2)
@@ -183,5 +194,6 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
