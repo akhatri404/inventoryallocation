@@ -28,7 +28,7 @@ def highlight_ordersheet(ws):
 
     for row in range(2, ws.max_row + 1):
         val = ws.cell(row=row, column=col_correct).value
-        if isinstance(val, (int, float)) and val > 0:　# condition to check the order - shipping
+        if isinstance(val, (int, float)) and val > 0:#condition to check the order - shipping
             for col in range(1, ws.max_column + 1):
                 ws.cell(row=row, column=col).fill = highlight
 
@@ -216,6 +216,7 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
