@@ -62,6 +62,7 @@ def color_excel_headers(ws, color="FFFF00"):
     header_fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
     for cell in ws[1]:  # first row is header
         cell.fill = header_fill
+        cell.font = Font(bold=True, size=12)
 
 # ------------------------------
 # Hide columns as it reference format
@@ -110,14 +111,19 @@ def add_group_headers(ws, group_col_name):
 
         # Insert header text
         ws.cell(row=header_row, column=1).value = f"{group_col_name}: {value}"
-        ws.cell(row=header_row, column=1).font = Font(bold=True)
+        ws.cell(row=header_row, column=1).font = Font(name="Yu Gothlic", bold=True)
+        ws.cell(row=header_row, column=1).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
 
         # Create actual row group
         ws.row_dimensions.group(first_child, last_child, outline_level=1)
 
         offset += 1
 
-
+def set_japanese_font(ws, font_name="Yu Gothic"):
+    """Apply Japanese-safe font to the entire worksheet."""
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.font = Font(name=font_name)
 
 # ------------------------------
 # Create downloadable excel file with 3 sheets with highlight function
@@ -131,9 +137,14 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
 
     wb = load_workbook(filename=BytesIO(output.getvalue()))
 
+    # Setting Font MS Gothic to all sheets:
+    set_japanese_font(wb["Sheet1"], "Yu Gothic")
+    set_japanese_font(wb["相手先注文"], "Yu Gothic")
+    set_japanese_font(wb["商品名"], "Yu Gothic")
+
     # Highlighting + Grouping
     highlight_ordersheet(wb["Sheet1"])
-    # --- New code: insert group headers ---
+    # --- insert group headers ---
     add_group_headers(wb["相手先注文"], "相手先注文No")
     add_group_headers(wb["商品名"], "商品名")
 
@@ -149,6 +160,7 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     color_excel_headers(wb["Sheet1"], color="FFFF00")        # Yellow headers
     color_excel_headers(wb["相手先注文"], color="FFFF00")
     color_excel_headers(wb["商品名"], color="FFFF00")
+
     out2 = BytesIO()
 
     wb.save(out2)
@@ -169,7 +181,7 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    #st.success("データがアップロードしました。")
+    st.success("データがアップロードしました。")
     #st.write(df.head())
 
     # Drop last 2 columns if possible
