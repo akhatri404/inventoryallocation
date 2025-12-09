@@ -4,6 +4,7 @@ from io import BytesIO
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
 from openpyxl.utils import get_column_letter
+import time
 
 st.title("出荷在庫引当システム")
 
@@ -222,10 +223,12 @@ if uploaded_file:
         progress.progress(100, text="100%")
         time.sleep(3)
         progress.empty()
+        time.sleep(1)
         # Remove the message
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
