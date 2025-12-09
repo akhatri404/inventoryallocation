@@ -155,7 +155,7 @@ if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
     # Create a placeholder
     placeholder = st.empty()
-    progress = st.progress(0)
+    progress = st.progress(0, text="0%")
     # Drop last 2 columns if possible
     if df.shape[1] > 2:
         df = df.drop(columns=[df.columns[-2], df.columns[-1]])
@@ -189,7 +189,7 @@ if uploaded_file:
         file_name="出荷在庫引当.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    progress.progress(33)
+    progress.progress(33, text="33%")
 
     # ------------------------------
     # Split files by 商品CD prefix "15"
@@ -207,7 +207,7 @@ if uploaded_file:
             file_name="出荷在庫引当_4251.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        progress.progress(66)
+        progress.progress(66, text="66%")
 
         # File B
         order_sheet_B = sort_and_move_first(dfB, "相手先注文No")
@@ -219,11 +219,15 @@ if uploaded_file:
             file_name="出荷在庫引当_9052.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        progress.progress(100)
+        progress.progress(100, text="100%")
+        time.sleep(3)
+        progress.empty()
+        time.sleep(1)
         # Remove the message
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
