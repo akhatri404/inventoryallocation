@@ -189,7 +189,7 @@ if uploaded_file:
         file_name="出荷在庫引当.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    progress = st.progress(33)
+    progress.progress(33)
 
     # ------------------------------
     # Split files by 商品CD prefix "15"
@@ -207,7 +207,7 @@ if uploaded_file:
             file_name="出荷在庫引当_4251.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        progress = st.progress(66)
+        progress.progress(66)
 
         # File B
         order_sheet_B = sort_and_move_first(dfB, "相手先注文No")
@@ -219,11 +219,12 @@ if uploaded_file:
             file_name="出荷在庫引当_9052.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        progress = st.progress(100)
+        progress.progress(100)
         # Remove the message
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
