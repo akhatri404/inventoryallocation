@@ -181,7 +181,7 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    st.success("データがアップロードしました。")
+    #st.success("データがアップロードしました。")
     #st.write(df.head())
 
     # Drop last 2 columns if possible
@@ -253,3 +253,4 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
