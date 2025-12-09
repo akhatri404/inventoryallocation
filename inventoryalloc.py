@@ -32,31 +32,6 @@ def highlight_ordersheet(ws):
             for col in range(1, ws.max_column + 1):
                 ws.cell(row=row, column=col).fill = highlight
 
-def group_rows_by_column(ws, group_col_name):
-    headers = [cell.value for cell in ws[1]]
-    try:
-        col_idx = headers.index(group_col_name) + 1
-    except ValueError:
-        return
-
-    current_value = None
-    start_row = None
-
-    for row in range(2, ws.max_row + 2):
-        cell_value = ws.cell(row=row, column=col_idx).value
-
-        if cell_value != current_value:
-            if start_row is not None:
-                for r in range(start_row + 1, row):
-                    ws.row_dimensions[r].outlineLevel = 1
-            current_value = cell_value
-            start_row = row
-
-    # FIX: group last block
-    if start_row is not None:
-        for r in range(start_row + 1, ws.max_row + 1):
-            ws.row_dimensions[r].outlineLevel = 1
-
 def color_excel_headers(ws, color="FFFF00"):
     """Apply background color to the header row of an openpyxl worksheet."""
     header_fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
@@ -148,9 +123,6 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     add_group_headers(wb["相手先注文"], "相手先注文No")
     add_group_headers(wb["商品名"], "商品名")
 
-    # group_rows_by_column(wb["相手先注文"], "相手先注文No")
-    # group_rows_by_column(wb["商品名"], "商品名")
-
     # ---- hide columns ONLY in the downloaded Excel ----
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
     hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
@@ -181,15 +153,10 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    #st.success("データがアップロードしました。")
-    #st.write(df.head())
 
     # Drop last 2 columns if possible
     if df.shape[1] > 2:
         df = df.drop(columns=[df.columns[-2], df.columns[-1]])
-
-    # st.subheader("After Cleaning (last two columns removed)")
-    # st.write(df.head())
 
     # ------------------------------
     # Calculated Columns
@@ -203,9 +170,6 @@ if uploaded_file:
         st.success("エクセルの準備...")
     else:
         st.error(f"Missing required columns: {required_cols}")
-
-    # st.subheader("Sheet1 (Cleaned + Calculated)")
-    # st.write(df.head()) 
 
     # ------------------------------
     # Prepare sheets
@@ -228,7 +192,6 @@ if uploaded_file:
     # ------------------------------
     if "商品CD" in df.columns:
         dfA, dfB = filter_by_product_id(df, "15")
-        # st.subheader("Split Excel Files Based on 商品CD prefix '15'")
 
         # File A
         order_sheet_A = sort_and_move_first(dfA, "相手先注文No")
@@ -253,4 +216,5 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
