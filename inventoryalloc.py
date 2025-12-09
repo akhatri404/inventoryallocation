@@ -122,7 +122,7 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    st.success("Data Uploaded")
+    st.success("データがアップロードしました。")
     #st.write(df.head())
 
     # Drop last 2 columns if possible
@@ -141,7 +141,7 @@ if uploaded_file:
         df["出荷数要訂正"] = df["受注数"] - df["出荷数"]
         df["受注金額"] = df["受注数"] * df["単価"]
         df["欠品金額"] = df["出荷数要訂正"] * df["単価"]
-        st.success("Calculated columns added")
+        st.success("エクセルの準備...")
     else:
         st.error(f"Missing required columns: {required_cols}")
 
@@ -194,6 +194,7 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
