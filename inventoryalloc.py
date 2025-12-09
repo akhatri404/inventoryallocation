@@ -111,15 +111,15 @@ uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    st.subheader("Raw Uploaded Data")
-    st.write(df.head())
+    #st.subheader("Raw Uploaded Data")
+    #st.write(df.head())
 
     # Drop last 2 columns if possible
     if df.shape[1] > 2:
         df = df.drop(columns=[df.columns[-2], df.columns[-1]])
 
-    st.subheader("After Cleaning (last two columns removed)")
-    st.write(df.head())
+    #st.subheader("After Cleaning (last two columns removed)")
+    #st.write(df.head())
 
     # ------------------------------
     # Calculated Columns
@@ -134,8 +134,8 @@ if uploaded_file:
     else:
         st.error(f"Missing required columns: {required_cols}")
 
-    st.subheader("Sheet1 (Cleaned + Calculated)")
-    st.write(df.head())
+    #st.subheader("Sheet1 (Cleaned + Calculated)")
+    #st.write(df.head())
 
     # ------------------------------
     # Prepare sheets
@@ -183,3 +183,4 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
