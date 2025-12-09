@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Font
 from openpyxl.utils import get_column_letter
 
 st.title("出荷在庫引当システム")
@@ -62,6 +62,7 @@ def color_excel_headers(ws, color="FFFF00"):
     header_fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
     for cell in ws[1]:  # first row is header
         cell.fill = header_fill
+
 # ------------------------------
 # Hide columns as it reference format
 # ------------------------------
@@ -74,6 +75,49 @@ def hide_columns(ws, df, columns_to_hide):
             col_idx = df.columns.get_loc(col_name) + 1  # convert to 1-based index
             col_letter = get_column_letter(col_idx)
             ws.column_dimensions[col_letter].hidden = True
+
+def add_group_headers(ws, group_col_name):
+    headers = [cell.value for cell in ws[1]]
+    try:
+        col_idx = headers.index(group_col_name) + 1
+    except ValueError:
+        return
+
+    ws.sheet_properties.outlinePr.summaryBelow = False
+
+    # STEP 1 — Detect groups BEFORE inserting rows
+    groups = []
+    start_row = 2
+    current_value = ws.cell(row=2, column=col_idx).value
+
+    for row in range(3, ws.max_row + 2):
+        value = ws.cell(row=row, column=col_idx).value
+        if value != current_value:
+            groups.append((current_value, start_row, row - 1))
+            start_row = row
+            current_value = value
+
+    # STEP 2 — Insert headers in REVERSE so row indices remain correct
+    for value, start, end in reversed(groups):
+        ws.insert_rows(start)
+
+    # STEP 3 — Recalculate exact group positions AFTER row insertion
+    offset = 0
+    for value, start, end in groups:
+        header_row = start + offset
+        first_child = header_row + 1
+        last_child = end + offset + 1
+
+        # Insert header text
+        ws.cell(row=header_row, column=1).value = f"{group_col_name}: {value}"
+        ws.cell(row=header_row, column=1).font = Font(bold=True)
+
+        # Create actual row group
+        ws.row_dimensions.group(first_child, last_child, outline_level=1)
+
+        offset += 1
+
+
 
 # ------------------------------
 # Create downloadable excel file with 3 sheets with highlight function
@@ -89,21 +133,24 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
 
     # Highlighting + Grouping
     highlight_ordersheet(wb["Sheet1"])
-    group_rows_by_column(wb["相手先注文"], "相手先注文No")
-    group_rows_by_column(wb["商品名"], "商品名")
+    # --- New code: insert group headers ---
+    add_group_headers(wb["相手先注文"], "相手先注文No")
+    add_group_headers(wb["商品名"], "商品名")
+
+    # group_rows_by_column(wb["相手先注文"], "相手先注文No")
+    # group_rows_by_column(wb["商品名"], "商品名")
 
     # ---- hide columns ONLY in the downloaded Excel ----
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
     hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
     hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
 
-        # ---- NEW: Color headers in all sheets ----
+    # ---- NEW: Color headers in all sheets ----
     color_excel_headers(wb["Sheet1"], color="FFFF00")        # Yellow headers
     color_excel_headers(wb["相手先注文"], color="FFFF00")
     color_excel_headers(wb["商品名"], color="FFFF00")
     out2 = BytesIO()
 
-    out2 = BytesIO()
     wb.save(out2)
     return out2.getvalue()
 
@@ -122,15 +169,15 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-    st.success("データがアップロードしました。")
+    #st.success("データがアップロードしました。")
     #st.write(df.head())
 
     # Drop last 2 columns if possible
     if df.shape[1] > 2:
         df = df.drop(columns=[df.columns[-2], df.columns[-1]])
 
-    #st.subheader("After Cleaning (last two columns removed)")
-    #st.write(df.head())
+    # st.subheader("After Cleaning (last two columns removed)")
+    # st.write(df.head())
 
     # ------------------------------
     # Calculated Columns
@@ -145,8 +192,8 @@ if uploaded_file:
     else:
         st.error(f"Missing required columns: {required_cols}")
 
-    #st.subheader("Sheet1 (Cleaned + Calculated)")
-    #st.write(df.head())
+    # st.subheader("Sheet1 (Cleaned + Calculated)")
+    # st.write(df.head()) 
 
     # ------------------------------
     # Prepare sheets
@@ -194,14 +241,3 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
-
-
-
-
-
-
-
-
-
-
-
