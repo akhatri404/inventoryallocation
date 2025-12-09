@@ -1,0 +1,185 @@
+import streamlit as st
+import pandas as pd
+from io import BytesIO
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+from openpyxl.utils import get_column_letter
+
+st.title("Automated Inventory Allocation System")
+
+# ------------------------------
+# Helper Functions
+# ------------------------------
+def sort_and_move_first(df, sort_col):
+    """Sort dataframe by a column and move it to the first column."""
+    df_sorted = df.sort_values(sort_col)
+    cols = list(df_sorted.columns)
+    cols.insert(0, cols.pop(cols.index(sort_col)))
+    return df_sorted[cols]
+
+def highlight_ordersheet(ws):
+    highlight = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    headers = [cell.value for cell in ws[1]]
+
+    try:
+        col_correct = headers.index("出荷数要訂正") + 1
+    except ValueError:
+        return
+
+    for row in range(2, ws.max_row + 1):
+        val = ws.cell(row=row, column=col_correct).value
+        if isinstance(val, (int, float)) and val > 0:
+            for col in range(1, ws.max_column + 1):
+                ws.cell(row=row, column=col).fill = highlight
+
+def group_rows_by_column(ws, group_col_name):
+    headers = [cell.value for cell in ws[1]]
+    try:
+        col_idx = headers.index(group_col_name) + 1
+    except ValueError:
+        return
+
+    current_value = None
+    start_row = None
+
+    for row in range(2, ws.max_row + 2):
+        cell_value = ws.cell(row=row, column=col_idx).value
+
+        if cell_value != current_value:
+            if start_row is not None:
+                for r in range(start_row + 1, row):
+                    ws.row_dimensions[r].outlineLevel = 1
+            current_value = cell_value
+            start_row = row
+
+    # FIX: group last block
+    if start_row is not None:
+        for r in range(start_row + 1, ws.max_row + 1):
+            ws.row_dimensions[r].outlineLevel = 1
+
+# ------------------------------
+# Hide columns as it reference format
+# ------------------------------
+COLUMNS_TO_HIDE = ["受注No", "受注行No", "出荷優先度", "倉庫CD", "倉庫名", "得意先CD", "得意先名", "ロケ", "ﾏｽﾀ単価", "金額", "現在庫数", "出荷指示数", "未出荷数", "単価相違"]
+
+def hide_columns(ws, df, columns_to_hide):
+    """Hide specific columns in the Excel sheet but leave Streamlit display unchanged."""
+    for col_name in columns_to_hide:
+        if col_name in df.columns:
+            col_idx = df.columns.get_loc(col_name) + 1  # convert to 1-based index
+            col_letter = get_column_letter(col_idx)
+            ws.column_dimensions[col_letter].hidden = True
+
+# ------------------------------
+# Create downloadable excel file with 3 sheets with highlight function
+# ------------------------------
+def create_excel_file(sheet1, order_sheet, product_sheet):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        sheet1.to_excel(writer, sheet_name="Sheet1", index=False)
+        order_sheet.to_excel(writer, sheet_name="相手先注文", index=False)
+        product_sheet.to_excel(writer, sheet_name="商品名", index=False)
+
+    wb = load_workbook(filename=BytesIO(output.getvalue()))
+
+    # Highlighting + Grouping
+    highlight_ordersheet(wb["Sheet1"])
+    group_rows_by_column(wb["相手先注文"], "相手先注文No")
+    group_rows_by_column(wb["商品名"], "商品名")
+
+    # ---- hide columns ONLY in the downloaded Excel ----
+    hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
+    hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
+    hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
+
+    out2 = BytesIO()
+    wb.save(out2)
+    return out2.getvalue()
+
+# ------------------------------
+# Create two separate excel files based on product id
+# ------------------------------
+def filter_by_product_id(df, prefix="15"):
+    df = df.copy()
+    df["商品CD"] = df["商品CD"].astype(str)
+    return df[df["商品CD"].str.startswith(prefix)], df[~df["商品CD"].str.startswith(prefix)]
+
+# ------------------------------
+# Upload CSV
+# ------------------------------
+uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+
+if uploaded_file:
+    df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
+    st.subheader("Raw Uploaded Data")
+    st.write(df.head())
+
+    # Drop last 2 columns if possible
+    if df.shape[1] > 2:
+        df = df.drop(columns=[df.columns[-2], df.columns[-1]])
+
+    st.subheader("After Cleaning (last two columns removed)")
+    st.write(df.head())
+
+    # ------------------------------
+    # Calculated Columns
+    # ------------------------------
+    required_cols = ["単価", "出荷数", "受注数"]
+    if all(col in df.columns for col in required_cols):
+        df["出荷金額"] = df["単価"] * df["出荷数"]
+        df["出荷数要訂正"] = df["受注数"] - df["出荷数"]
+        df["受注金額"] = df["受注数"] * df["単価"]
+        df["欠品金額"] = df["出荷数要訂正"] * df["単価"]
+        st.success("Calculated columns added")
+    else:
+        st.error(f"Missing required columns: {required_cols}")
+
+    st.subheader("Sheet1 (Cleaned + Calculated)")
+    st.write(df.head())
+
+    # ------------------------------
+    # Prepare sheets
+    # ------------------------------
+    order_sheet = sort_and_move_first(df, "相手先注文No") if "相手先注文No" in df.columns else pd.DataFrame()
+    product_sheet = sort_and_move_first(df, "商品名") if "商品名" in df.columns else pd.DataFrame()
+
+    # Full Excel file
+    full_excel = create_excel_file(df, order_sheet, product_sheet)
+    st.subheader("ダウンロードエクセル")
+    st.download_button(
+        "すべてダウンロード",
+        full_excel,
+        file_name="full_output.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    # ------------------------------
+    # Split files by 商品CD prefix "15"
+    # ------------------------------
+    if "商品CD" in df.columns:
+        dfA, dfB = filter_by_product_id(df, "15")
+        # st.subheader("Split Excel Files Based on 商品CD prefix '15'")
+
+        # File A
+        order_sheet_A = sort_and_move_first(dfA, "相手先注文No")
+        product_sheet_A = sort_and_move_first(dfA, "商品名")
+        excelA = create_excel_file(dfA, order_sheet_A, product_sheet_A)
+        st.download_button(
+            "ダウンロード File A (商品CD 15-)",
+            excelA,
+            file_name="商品CD_15-_4251.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        # File B
+        order_sheet_B = sort_and_move_first(dfB, "相手先注文No")
+        product_sheet_B = sort_and_move_first(dfB, "商品名")
+        excelB = create_excel_file(dfB, order_sheet_B, product_sheet_B)
+        st.download_button(
+            "ダウンロード File B (商品CD 15- 以外)",
+            excelB,
+            file_name="商品CD_15-以外_9052.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    else:
+        st.error("Column '商品CD' not found — cannot split the file.")
