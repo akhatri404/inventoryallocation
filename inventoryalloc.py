@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
-st.title("Automated Inventory Allocation System")
+st.title("在庫割り当てシステム")
 
 # ------------------------------
 # Helper Functions
@@ -183,4 +183,5 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
