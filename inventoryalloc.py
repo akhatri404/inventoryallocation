@@ -222,11 +222,11 @@ if uploaded_file:
         progress.progress(100, text="100%")
         time.sleep(3)
         progress.empty()
-        time.sleep(1)
         # Remove the message
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
