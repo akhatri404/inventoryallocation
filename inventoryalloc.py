@@ -160,7 +160,7 @@ if uploaded_file:
     st.download_button(
         "すべてダウンロード",
         full_excel,
-        file_name="在庫割り当て.xlsx",
+        file_name="出荷在庫引当.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
@@ -178,7 +178,7 @@ if uploaded_file:
         st.download_button(
             "ダウンロード File A (商品CD 15-)",
             excelA,
-            file_name="在庫割り当て_4251.xlsx",
+            file_name="出荷在庫引当_4251.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
@@ -189,11 +189,12 @@ if uploaded_file:
         st.download_button(
             "ダウンロード File B (商品CD 15- 以外)",
             excelB,
-            file_name="在庫割り当て_9052.xlsx",
+            file_name="出荷在庫引当_9052.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
