@@ -153,7 +153,8 @@ uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
-
+    # Create a placeholder
+    placeholder = st.empty()
     # Drop last 2 columns if possible
     if df.shape[1] > 2:
         df = df.drop(columns=[df.columns[-2], df.columns[-1]])
@@ -167,7 +168,8 @@ if uploaded_file:
         df["出荷数要訂正"] = df["受注数"] - df["出荷数"]
         df["受注金額"] = df["受注数"] * df["単価"]
         df["欠品金額"] = df["出荷数要訂正"] * df["単価"]
-        st.success("エクセルの準備...")
+        # Show the temporary message
+        placeholder.success("エクセルの準備...")
     else:
         st.error(f"Missing required columns: {required_cols}")
 
@@ -214,8 +216,11 @@ if uploaded_file:
             file_name="出荷在庫引当_9052.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+        # Remove the message
+        placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
