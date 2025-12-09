@@ -118,7 +118,7 @@ def filter_by_product_id(df, prefix="15"):
 # ------------------------------
 # Upload CSV
 # ------------------------------
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+uploaded_file = st.file_uploader("アップロード CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file, header=1, encoding="cp932")  # second row as header
@@ -194,6 +194,7 @@ if uploaded_file:
         )
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
