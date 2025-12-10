@@ -103,7 +103,6 @@ def set_japanese_font(ws, font_name="Yu Gothic"):
 
 def autofit_columns(ws):
     """Auto-fit column widths based on cell contents."""
-    from openpyxl.utils import get_column_letter
 
     for col in ws.columns:
         max_length = 0
@@ -253,6 +252,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
