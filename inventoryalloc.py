@@ -101,6 +101,25 @@ def set_japanese_font(ws, font_name="Yu Gothic"):
         for cell in row:
             cell.font = Font(name=font_name)
 
+def autofit_columns(ws):
+    """Auto-fit column widths based on cell contents."""
+    from openpyxl.utils import get_column_letter
+
+    for col in ws.columns:
+        max_length = 0
+        col_letter = get_column_letter(col[0].column)
+
+        for cell in col:
+            try:
+                cell_value = str(cell.value) if cell.value is not None else ""
+                # Larger multiplier gives more breathing room
+                max_length = max(max_length, len(cell_value))
+            except:
+                pass
+
+        adjusted = (max_length + 2)  # margin
+        ws.column_dimensions[col_letter].width = adjusted
+
 # ------------------------------
 # Create downloadable excel file with 3 sheets with highlight function
 # ------------------------------
@@ -133,6 +152,10 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     color_excel_headers(wb["Sheet1"], color="FFFF00")        # Yellow headers
     color_excel_headers(wb["相手先注文"], color="FFFF00")
     color_excel_headers(wb["商品名"], color="FFFF00")
+
+    autofit_columns(wb["Sheet1"])
+    autofit_columns(wb["相手先注文"])
+    autofit_columns(wb["商品名"])
 
     out2 = BytesIO()
 
@@ -227,6 +250,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
