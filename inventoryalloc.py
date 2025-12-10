@@ -116,7 +116,7 @@ def autofit_columns(ws):
             except:
                 pass
 
-        adjusted = (max_length + 2)  # margin
+        adjusted = (max_length * 1.5 + 2)  # margin
         ws.column_dimensions[col_letter].width = adjusted
 
 # ------------------------------
@@ -130,8 +130,8 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
         product_sheet.to_excel(writer, sheet_name="商品名", index=False)
         # Freeze header row on each sheet
         writer.sheets["Sheet1"].freeze_panes = "A2"
-        writer.sheets["相手先注文"].freeze_panes = "A2"
-        writer.sheets["商品名"].freeze_panes = "A2"
+        writer.sheets["相手先注文"].freeze_panes = "B2"
+        writer.sheets["商品名"].freeze_panes = "B2"
 
     wb = load_workbook(filename=BytesIO(output.getvalue()))
 
@@ -261,6 +261,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
