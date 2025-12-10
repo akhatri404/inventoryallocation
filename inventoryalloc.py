@@ -85,8 +85,11 @@ def add_group_headers(ws, group_col_name):
         first_child = header_row + 1
         last_child = end + offset + 1
 
+        # Number of child rows
+        child_count = (end - start + 1)
+
         # Insert header text
-        ws.cell(row=header_row, column=1).value = f"{group_col_name}: {value}"
+        ws.cell(row=header_row, column=1).value = f"{group_col_name}: {value} (合計: {child_count})"
         ws.cell(row=header_row, column=1).font = Font(name="Yu Gothlic", bold=True)
         ws.cell(row=header_row, column=1).fill = PatternFill(start_color="FFD580", end_color="FFD580", fill_type="solid")
 
@@ -261,6 +264,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
