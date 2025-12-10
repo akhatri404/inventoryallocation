@@ -129,41 +129,41 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         sheet1.to_excel(writer, sheet_name="Sheet1", index=False)
-        order_sheet.to_excel(writer, sheet_name="相手先注文", index=False)
+        order_sheet.to_excel(writer, sheet_name="相手先注文No", index=False)
         product_sheet.to_excel(writer, sheet_name="商品名", index=False)
         # Freeze header row on each sheet
         writer.sheets["Sheet1"].freeze_panes = "A2"
-        writer.sheets["相手先注文"].freeze_panes = "B2"
+        writer.sheets["相手先注文No"].freeze_panes = "B2"
         writer.sheets["商品名"].freeze_panes = "B2"
 
     wb = load_workbook(filename=BytesIO(output.getvalue()))
 
     # Setting Font Yu Gothic to all sheets:
     set_japanese_font(wb["Sheet1"], "Yu Gothic")
-    set_japanese_font(wb["相手先注文"], "Yu Gothic")
+    set_japanese_font(wb["相手先注文No"], "Yu Gothic")
     set_japanese_font(wb["商品名"], "Yu Gothic")
 
     # Highlighting when order > shipping
     highlight_ordersheet(wb["Sheet1"])
-    highlight_ordersheet(wb["相手先注文"])
+    highlight_ordersheet(wb["相手先注文No"])
     highlight_ordersheet(wb["商品名"])
     
     # --- insert group headers ---
-    add_group_headers(wb["相手先注文"], "相手先注文No")
+    add_group_headers(wb["相手先注文No"], "相手先注文No")
     add_group_headers(wb["商品名"], "商品名")
 
     # ---- hide columns ONLY in the downloaded Excel ----
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
-    hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
+    hide_columns(wb["相手先注文No"], order_sheet, COLUMNS_TO_HIDE)
     hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
 
     # ---- Color headers in all sheets ----
     color_excel_headers(wb["Sheet1"], color="FFD580")        # Yellow headers
-    color_excel_headers(wb["相手先注文"], color="FFD580")
+    color_excel_headers(wb["相手先注文No"], color="FFD580")
     color_excel_headers(wb["商品名"], color="FFD580")
 
     autofit_columns(wb["Sheet1"])
-    autofit_columns(wb["相手先注文"])
+    autofit_columns(wb["相手先注文No"])
     autofit_columns(wb["商品名"])
 
     out2 = BytesIO()
@@ -264,6 +264,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
