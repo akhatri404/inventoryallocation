@@ -33,7 +33,7 @@ def highlight_ordersheet(ws):
             for col in range(1, ws.max_column + 1):
                 ws.cell(row=row, column=col).fill = highlight
 
-def color_excel_headers(ws, color="90EE90"):
+def color_excel_headers(ws, color="FFD580"):
     """Apply background color to the header row of an openpyxl worksheet."""
     header_fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
     for cell in ws[1]:  # first row is header
@@ -88,7 +88,7 @@ def add_group_headers(ws, group_col_name):
         # Insert header text
         ws.cell(row=header_row, column=1).value = f"{group_col_name}: {value}"
         ws.cell(row=header_row, column=1).font = Font(name="Yu Gothlic", bold=True)
-        ws.cell(row=header_row, column=1).fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+        ws.cell(row=header_row, column=1).fill = PatternFill(start_color="FFD580", end_color="FFD580", fill_type="solid")
 
         # Create actual row group
         ws.row_dimensions.group(first_child, last_child, outline_level=1)
@@ -155,9 +155,9 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
 
     # ---- Color headers in all sheets ----
-    color_excel_headers(wb["Sheet1"], color="90EE90")        # Yellow headers
-    color_excel_headers(wb["相手先注文"], color="90EE90")
-    color_excel_headers(wb["商品名"], color="90EE90")
+    color_excel_headers(wb["Sheet1"], color="FFD580")        # Yellow headers
+    color_excel_headers(wb["相手先注文"], color="FFD580")
+    color_excel_headers(wb["商品名"], color="FFD580")
 
     autofit_columns(wb["Sheet1"])
     autofit_columns(wb["相手先注文"])
@@ -261,6 +261,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
