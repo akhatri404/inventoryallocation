@@ -132,13 +132,16 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
 
     wb = load_workbook(filename=BytesIO(output.getvalue()))
 
-    # Setting Font MS Gothic to all sheets:
+    # Setting Font Yu Gothic to all sheets:
     set_japanese_font(wb["Sheet1"], "Yu Gothic")
     set_japanese_font(wb["相手先注文"], "Yu Gothic")
     set_japanese_font(wb["商品名"], "Yu Gothic")
 
-    # Highlighting + Grouping
+    # Highlighting when order > shipping
     highlight_ordersheet(wb["Sheet1"])
+    highlight_ordersheet(wb["相手先注文"])
+    highlight_ordersheet(wb["商品名"])
+    
     # --- insert group headers ---
     add_group_headers(wb["相手先注文"], "相手先注文No")
     add_group_headers(wb["商品名"], "商品名")
@@ -148,7 +151,7 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     hide_columns(wb["相手先注文"], order_sheet, COLUMNS_TO_HIDE)
     hide_columns(wb["商品名"], product_sheet, COLUMNS_TO_HIDE)
 
-    # ---- NEW: Color headers in all sheets ----
+    # ---- Color headers in all sheets ----
     color_excel_headers(wb["Sheet1"], color="FFFF00")        # Yellow headers
     color_excel_headers(wb["相手先注文"], color="FFFF00")
     color_excel_headers(wb["商品名"], color="FFFF00")
@@ -244,12 +247,13 @@ if uploaded_file:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         progress.progress(100, text="100%")
-        time.sleep(3)
+        time.sleep(2)
         progress.empty()
         # Remove the message
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
