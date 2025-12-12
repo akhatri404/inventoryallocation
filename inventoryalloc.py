@@ -11,12 +11,23 @@ st.title("出荷在庫引当システム")
 # ------------------------------
 # Helper Functions
 # ------------------------------
-def sort_and_move_first(df, sort_col):
+def sort_and_move_first(df, sort_col, second_col=None):
     """Sort dataframe by a column and move it to the first column."""
     df_sorted = df.sort_values(sort_col)
     cols = list(df_sorted.columns)
-    cols.insert(0, cols.pop(cols.index(sort_col)))
-    return df_sorted[cols]
+    # Move sort_col to first position
+    cols.remove(sort_col)
+    new_order = [sort_col]
+
+    # If second_col exists, move it next
+    if second_col and second_col in cols:
+        cols.remove(second_col)
+        new_order.append(second_col)
+
+    # Add the remaining columns
+    new_order.extend(cols)
+
+    return df_sorted[new_order]
 
 def highlight_ordersheet(ws):
     highlight = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
@@ -131,6 +142,21 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
         sheet1.to_excel(writer, sheet_name="Sheet1", index=False)
         order_sheet.to_excel(writer, sheet_name="相手先注文No", index=False)
         product_sheet.to_excel(writer, sheet_name="商品名", index=False)
+
+        # Get workbook
+        workbook = writer.book
+
+        # Format JANCD column as text in the 商品名 sheet
+        ws = writer.sheets["商品名"]
+
+        # Find the JANCD column index (0-based → A=1, B=2...)
+        jancd_col_idx = list(product_sheet.columns).index("JANCD") + 1
+        col_letter = openpyxl.utils.get_column_letter(jancd_col_idx)
+
+        # Apply text format to the entire column
+        for cell in ws[col_letter]:
+            cell.number_format = "@"
+            
         # Freeze header row on each sheet
         writer.sheets["Sheet1"].freeze_panes = "A2"
         writer.sheets["相手先注文No"].freeze_panes = "B2"
@@ -150,7 +176,7 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     
     # --- insert group headers ---
     add_group_headers(wb["相手先注文No"], "相手先注文No")
-    add_group_headers(wb["商品名"], "商品名")
+    add_group_headers(wb["商品名"], "JANCD")
 
     # ---- hide columns ONLY in the downloaded Excel ----
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
@@ -215,8 +241,10 @@ if uploaded_file:
     # ------------------------------
     # Prepare sheets
     # ------------------------------
+    df["JANCD"] = df["JANCD"].apply(lambda x: str(int(x)) if pd.notnull(x) else "")
+    
     order_sheet = sort_and_move_first(df, "相手先注文No") if "相手先注文No" in df.columns else pd.DataFrame()
-    product_sheet = sort_and_move_first(df, "商品名") if "商品名" in df.columns else pd.DataFrame()
+    product_sheet = sort_and_move_first(df, "JANCD", second_col="商品名") if "商品名" in df.columns else pd.DataFrame()
 
     # Full Excel file
     full_excel = create_excel_file(df, order_sheet, product_sheet)
@@ -237,19 +265,19 @@ if uploaded_file:
 
         # File A
         order_sheet_A = sort_and_move_first(dfA, "相手先注文No")
-        product_sheet_A = sort_and_move_first(dfA, "商品名")
+        product_sheet_A = sort_and_move_first(dfA, "JANCD", second_col="商品名")
         excelA = create_excel_file(dfA, order_sheet_A, product_sheet_A)
         st.download_button(
             "ダウンロード File A (商品CD 15-)",
             excelA,
-            file_name="出荷在庫引当_4251.xlsx",
+            file_name="出荷在庫引当_4254.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         progress.progress(66, text="66%")
 
         # File B
         order_sheet_B = sort_and_move_first(dfB, "相手先注文No")
-        product_sheet_B = sort_and_move_first(dfB, "商品名")
+        product_sheet_B = sort_and_move_first(dfB, "JANCD", second_col="商品名")
         excelB = create_excel_file(dfB, order_sheet_B, product_sheet_B)
         st.download_button(
             "ダウンロード File B (商品CD 15- 以外)",
@@ -264,6 +292,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
