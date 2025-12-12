@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
 from openpyxl.utils import get_column_letter
 import time
+import openpyxl
 
 st.title("出荷在庫引当システム")
 
@@ -292,6 +293,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
