@@ -144,9 +144,6 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
         order_sheet.to_excel(writer, sheet_name="相手先注文No", index=False)
         product_sheet.to_excel(writer, sheet_name="商品名", index=False)
 
-        # Get workbook
-        workbook = writer.book
-
         # Format JANCD column as text in the 商品名 sheet
         ws = writer.sheets["商品名"]
 
@@ -293,6 +290,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
