@@ -65,14 +65,20 @@ def hide_columns(ws, df, columns_to_hide):
             col_letter = get_column_letter(col_idx)
             ws.column_dimensions[col_letter].hidden = True
 
-def add_group_headers(ws, group_col_name):
+def add_group_headers(ws, group_col_name, do_sum=False):
     headers = [cell.value for cell in ws[1]]
     try:
-        col_idx = headers.index(group_col_name) + 1
-        ship_qty_col = headers.index("出荷数") + 1
-        ship_amt_col = headers.index("出荷金額") + 1           
+        col_idx = headers.index(group_col_name) + 1        
     except ValueError:
         return
+
+    # Only required for product sheet
+    if do_sum:
+        try:
+            ship_qty_col = headers.index("出荷数") + 1
+            ship_amt_col = headers.index("出荷金額") + 1
+        except ValueError:
+            do_sum = False    
 
     ws.sheet_properties.outlinePr.summaryBelow = False
 
@@ -98,19 +104,22 @@ def add_group_headers(ws, group_col_name):
         header_row = start + offset
         first_child = header_row + 1
         last_child = end + offset + 1
-         # --- calculate sums ---
-        sum_qty = 0
-        sum_amt = 0
+        # --- calculate sums ---
+        if do_sum:
+            sum_qty = 0
+            sum_amt = 0
 
-        for r in range(first_child, last_child + 1):
-            q = ws.cell(row=r, column=ship_qty_col).value or 0
-            a = ws.cell(row=r, column=ship_amt_col).value or 0
-            sum_qty += q
-            sum_amt += a
-        # ws.cell(row=header_row, column=ship_qty_col).value = sum_qty
-        # ws.cell(row=header_row, column=ship_amt_col).value = sum_amt 
-        # ws.cell(row=header_row, column=ship_qty_col).font = Font(bold=True)
-        # ws.cell(row=header_row, column=ship_amt_col).font = Font(bold=True)        
+            for r in range(first_child, last_child + 1):
+                q = ws.cell(row=r, column=ship_qty_col).value or 0
+                a = ws.cell(row=r, column=ship_amt_col).value or 0
+                sum_qty += q
+                sum_amt += a
+            ws.cell(row=header_row, column=ship_qty_col).value = sum_qty
+            ws.cell(row=header_row, column=ship_amt_col).value = sum_amt     
+            ws.cell(row=header_row, column=ship_qty_col).font = Font(bold=True)
+            # ws.cell(row=header_row, column=ship_qty_col).fill = PatternFill(start_color="FFD580", end_color="FFD580", fill_type="solid")
+            ws.cell(row=header_row, column=ship_amt_col).font = Font(bold=True)
+            # ws.cell(row=header_row, column=ship_amt_col).fill = PatternFill(start_color="FFD580", end_color="FFD580", fill_type="solid")
 
         # Number of child rows
         child_count = (end - start + 1)
@@ -189,7 +198,7 @@ def create_excel_file(sheet1, order_sheet, product_sheet):
     
     # --- insert group headers ---
     add_group_headers(wb["相手先注文No"], "相手先注文No")
-    add_group_headers(wb["商品名"], "JANCD")
+    add_group_headers(wb["商品名"], "JANCD", do_sum=True)
 
     # ---- hide columns ONLY in the downloaded Excel ----
     hide_columns(wb["Sheet1"], sheet1, COLUMNS_TO_HIDE)
@@ -305,6 +314,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
