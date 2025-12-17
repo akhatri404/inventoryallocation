@@ -69,6 +69,8 @@ def add_group_headers(ws, group_col_name):
     headers = [cell.value for cell in ws[1]]
     try:
         col_idx = headers.index(group_col_name) + 1
+        ship_qty_col = headers.index("出荷数") + 1
+        ship_amt_col = headers.index("出荷金額") + 1           
     except ValueError:
         return
 
@@ -96,6 +98,19 @@ def add_group_headers(ws, group_col_name):
         header_row = start + offset
         first_child = header_row + 1
         last_child = end + offset + 1
+         # --- calculate sums ---
+        sum_qty = 0
+        sum_amt = 0
+
+        for r in range(first_child, last_child + 1):
+            q = ws.cell(row=r, column=ship_qty_col).value or 0
+            a = ws.cell(row=r, column=ship_amt_col).value or 0
+            sum_qty += q
+            sum_amt += a
+        ws.cell(row=header_row, column=ship_qty_col).value = sum_qty
+        ws.cell(row=header_row, column=ship_amt_col).value = sum_amt 
+        ws.cell(row=header_row, column=ship_qty_col).font = Font(bold=True)
+        ws.cell(row=header_row, column=ship_amt_col).font = Font(bold=True)        
 
         # Number of child rows
         child_count = (end - start + 1)
@@ -290,6 +305,7 @@ if uploaded_file:
         placeholder.empty()
     else:
         st.error("Column '商品CD' not found — cannot split the file.")
+
 
 
 
